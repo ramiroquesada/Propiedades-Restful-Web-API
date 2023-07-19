@@ -31,3 +31,7 @@ C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\obj\Debug\net7.
 C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\obj\Debug\net7.0\PropiedadesMagicas_API.pdb
 C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\obj\Debug\net7.0\PropiedadesMagicas_API.genruntimeconfig.cache
 C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\obj\Debug\net7.0\ref\PropiedadesMagicas_API.dll
+C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\bin\Debug\net7.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\bin\Debug\net7.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\bin\Debug\net7.0\Newtonsoft.Json.dll
+C:\Users\ramir\Desktop\PropiedadesMagicas\PropiedadesMagicas_API\bin\Debug\net7.0\Newtonsoft.Json.Bson.dll

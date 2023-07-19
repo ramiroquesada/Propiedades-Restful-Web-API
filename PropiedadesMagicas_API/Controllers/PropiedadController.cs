@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using PropiedadesMagicas_API.Datos;
 using PropiedadesMagicas_API.Models.Dto;
 
@@ -8,10 +9,18 @@ namespace PropiedadesMagicas_API.Controllers
     [ApiController]
     public class PropiedadController : ControllerBase
     {
+        private readonly ILogger<PropiedadController> _logger;
+
+        public PropiedadController(ILogger<PropiedadController> logger)
+        {
+            _logger = logger;
+        }
+
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<PropiedadDto>> GetPropiedades()
         {
+            _logger.LogInformation("Obtener todas las propiedades");
             return Ok(PropiedadStore.propiedadList);
         }
 
@@ -23,6 +32,7 @@ namespace PropiedadesMagicas_API.Controllers
         {
             if (id == 0)
             {
+                _logger.LogError("Error al obtener la Propiedad con id " + id);
                 return BadRequest();
             }
 
@@ -69,6 +79,70 @@ namespace PropiedadesMagicas_API.Controllers
             PropiedadStore.propiedadList.Add(propiedadDto);
 
             return CreatedAtRoute("GetPropiedad", new { id = propiedadDto.Id }, propiedadDto);
+        }
+
+        [HttpDelete("id: int")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult DeletePropiedad(int id)
+        {
+            if (id == 0)
+            {
+                return BadRequest();
+            }
+
+            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+
+            if (propiedad == null)
+            {
+                return NotFound();
+            }
+
+            PropiedadStore.propiedadList.Remove(propiedad);
+
+            return NoContent();
+        }
+
+        [HttpPut("id: int")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdatePropiedad(int id, [FromBody] PropiedadDto propiedadDto)
+        {
+            if (propiedadDto == null || id != propiedadDto.Id)
+            {
+                return BadRequest();
+            }
+
+            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+
+            propiedad.Nombre = propiedadDto.Nombre;
+            propiedad.Ocupantes = propiedadDto.Ocupantes;
+            propiedad.MetrosCuadrados = propiedadDto.MetrosCuadrados;
+
+            return NoContent();
+        }
+
+        [HttpPatch("id: int")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdatePartialPropiedad(int id, JsonPatchDocument<PropiedadDto> patchDto)
+        {
+            if (patchDto == null || id == 0)
+            {
+                return BadRequest();
+            }
+
+            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+
+            patchDto.ApplyTo(propiedad, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            return NoContent();
         }
     }
 }
