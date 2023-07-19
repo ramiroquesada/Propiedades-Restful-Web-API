@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\PropiedadesMagicas_API.props" />
+</Project>
