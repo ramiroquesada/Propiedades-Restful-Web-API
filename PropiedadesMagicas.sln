@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33801.468
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PropiedadesMagicas_API", "PropiedadesMagicas_API\PropiedadesMagicas_API.csproj", "{8F1B9D2A-8983-48E2-A421-C9593F567F0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8F1B9D2A-8983-48E2-A421-C9593F567F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F1B9D2A-8983-48E2-A421-C9593F567F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F1B9D2A-8983-48E2-A421-C9593F567F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F1B9D2A-8983-48E2-A421-C9593F567F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E03EA5E2-7CAE-4300-9A46-60CC2DE59964}
+	EndGlobalSection
+EndGlobal
