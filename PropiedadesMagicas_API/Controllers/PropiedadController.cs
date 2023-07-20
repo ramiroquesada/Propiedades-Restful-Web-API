@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PropiedadesMagicas_API.Datos;
+using PropiedadesMagicas_API.Models;
 using PropiedadesMagicas_API.Models.Dto;
 
 namespace PropiedadesMagicas_API.Controllers
@@ -11,9 +13,12 @@ namespace PropiedadesMagicas_API.Controllers
     {
         private readonly ILogger<PropiedadController> _logger;
 
-        public PropiedadController(ILogger<PropiedadController> logger)
+        private readonly ApplicationDbContext _db;
+
+        public PropiedadController(ILogger<PropiedadController> logger, ApplicationDbContext db)
         {
             _logger = logger;
+            _db = db;
         }
 
         [HttpGet]
@@ -21,7 +26,7 @@ namespace PropiedadesMagicas_API.Controllers
         public ActionResult<IEnumerable<PropiedadDto>> GetPropiedades()
         {
             _logger.LogInformation("Obtener todas las propiedades");
-            return Ok(PropiedadStore.propiedadList);
+            return Ok(_db.Propiedades.ToList());
         }
 
         [HttpGet("id:int", Name = "GetPropiedad")]
@@ -36,7 +41,9 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+            //var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+
+            var propiedad = _db.Propiedades.FirstOrDefault(p => p.Id == id);
 
             if (propiedad == null)
 
@@ -58,7 +65,7 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (PropiedadStore.propiedadList.FirstOrDefault(p => p.Nombre.ToLower() == propiedadDto.Nombre.ToLower()) != null)
+            if (_db.Propiedades.FirstOrDefault(p => p.Nombre.ToLower() == propiedadDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La propiedad con ese nombre ya existe!");
                 return BadRequest(ModelState);
@@ -74,9 +81,19 @@ namespace PropiedadesMagicas_API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            propiedadDto.Id = PropiedadStore.propiedadList.OrderByDescending(v => v.Id).FirstOrDefault().Id + 1;
+            Propiedad modelo = new()
+            {
+                Nombre = propiedadDto.Nombre,
+                Detalles = propiedadDto.Detalles,
+                ImagenUrl = propiedadDto.ImagenUrl,
+                Ocupantes = propiedadDto.Ocupantes,
+                Tarifa = propiedadDto.Tarifa,
+                MetrosCuadrados = propiedadDto.MetrosCuadrados,
+                Amenidad = propiedadDto.Amenidad
+            };
 
-            PropiedadStore.propiedadList.Add(propiedadDto);
+            _db.Propiedades.Add(modelo);
+            _db.SaveChanges();
 
             return CreatedAtRoute("GetPropiedad", new { id = propiedadDto.Id }, propiedadDto);
         }
@@ -92,14 +109,15 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+            var propiedad = _db.Propiedades.FirstOrDefault(p => p.Id == id);
 
             if (propiedad == null)
             {
                 return NotFound();
             }
 
-            PropiedadStore.propiedadList.Remove(propiedad);
+            _db.Propiedades.Remove(propiedad);
+            _db.SaveChanges();
 
             return NoContent();
         }
@@ -114,11 +132,26 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+            //var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
 
-            propiedad.Nombre = propiedadDto.Nombre;
-            propiedad.Ocupantes = propiedadDto.Ocupantes;
-            propiedad.MetrosCuadrados = propiedadDto.MetrosCuadrados;
+            //propiedad.Nombre = propiedadDto.Nombre;
+            //propiedad.Ocupantes = propiedadDto.Ocupantes;
+            //propiedad.MetrosCuadrados = propiedadDto.MetrosCuadrados;
+
+            Propiedad modelo = new()
+            {
+                Id = propiedadDto.Id,
+                Nombre = propiedadDto.Nombre,
+                Detalles = propiedadDto.Detalles,
+                ImagenUrl = propiedadDto.ImagenUrl,
+                Ocupantes = propiedadDto.Ocupantes,
+                Tarifa = propiedadDto.Tarifa,
+                MetrosCuadrados = propiedadDto.MetrosCuadrados,
+                Amenidad = propiedadDto.Amenidad
+            };
+
+            _db.Propiedades.Update(modelo);
+            _db.SaveChanges();
 
             return NoContent();
         }
@@ -133,14 +166,43 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
+            var propiedad = _db.Propiedades.AsNoTracking().FirstOrDefault(p => p.Id == id);
 
-            patchDto.ApplyTo(propiedad, ModelState);
+            PropiedadDto propiedadDto = new()
+            {
+                Id = propiedad.Id,
+                Nombre = propiedad.Nombre,
+                Detalles = propiedad.Detalles,
+                ImagenUrl = propiedad.ImagenUrl,
+                Ocupantes = propiedad.Ocupantes,
+                Tarifa = propiedad.Tarifa,
+                MetrosCuadrados = propiedad.MetrosCuadrados,
+                Amenidad = propiedad.Amenidad
+            };
+
+            if (propiedad == null) return BadRequest();
+
+            patchDto.ApplyTo(propiedadDto, ModelState);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            Propiedad modelo = new()
+            {
+                Id = propiedadDto.Id,
+                Nombre = propiedadDto.Nombre,
+                Detalles = propiedadDto.Detalles,
+                ImagenUrl = propiedadDto.ImagenUrl,
+                Ocupantes = propiedadDto.Ocupantes,
+                Tarifa = propiedadDto.Tarifa,
+                MetrosCuadrados = propiedadDto.MetrosCuadrados,
+                Amenidad = propiedadDto.Amenidad
+            };
+
+            _db.Propiedades.Update(modelo);
+            _db.SaveChanges();
 
             return NoContent();
         }
