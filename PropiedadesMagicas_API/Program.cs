@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PropiedadesMagicas_API;
 using PropiedadesMagicas_API.Datos;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddAutoMapper(typeof(MappingConfig));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

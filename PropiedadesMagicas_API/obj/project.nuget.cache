@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "kctzH7Wm0xCvtmvcGKSEM2qHCwGZmrGkqWBO09PsXqiru9hUmM5HfyQbkODHiVeFfSincVK0F2jet7Q6nKxuOQ==",
+  "dgSpecHash": "N/ROw1nkRQQsD/uHZOhKObhm1HsgaCuJHreNC+5HciR7WwsrUoeG442kvAqSDLChmRHfDgsy/lsxyBANfnll/w==",
   "success": true,
   "projectFilePath": "C:\\Users\\ramir\\Desktop\\PropiedadesMagicas\\PropiedadesMagicas_API\\PropiedadesMagicas_API.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\ramir\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
+    "C:\\Users\\ramir\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
     "C:\\Users\\ramir\\.nuget\\packages\\azure.core\\1.24.0\\azure.core.1.24.0.nupkg.sha512",
     "C:\\Users\\ramir\\.nuget\\packages\\azure.identity\\1.6.0\\azure.identity.1.6.0.nupkg.sha512",
     "C:\\Users\\ramir\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",

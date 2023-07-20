@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PropiedadesMagicas_API.Datos;
@@ -15,25 +16,31 @@ namespace PropiedadesMagicas_API.Controllers
 
         private readonly ApplicationDbContext _db;
 
-        public PropiedadController(ILogger<PropiedadController> logger, ApplicationDbContext db)
+        private readonly IMapper _mappper;
+
+        public PropiedadController(ILogger<PropiedadController> logger, ApplicationDbContext db, IMapper mapper)
         {
             _logger = logger;
             _db = db;
+            _mappper = mapper;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult<IEnumerable<PropiedadDto>> GetPropiedades()
+        public async Task<ActionResult<IEnumerable<PropiedadDto>>> GetPropiedades()
         {
             _logger.LogInformation("Obtener todas las propiedades");
-            return Ok(_db.Propiedades.ToList());
+
+            IEnumerable<Propiedad> propiedadList = await _db.Propiedades.ToListAsync();
+
+            return Ok(_mappper.Map<IEnumerable<PropiedadDto>>(propiedadList));
         }
 
         [HttpGet("id:int", Name = "GetPropiedad")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<PropiedadDto> GetPropiedad(int id)
+        public async Task<ActionResult<PropiedadDto>> GetPropiedad(int id)
         {
             if (id == 0)
             {
@@ -43,7 +50,7 @@ namespace PropiedadesMagicas_API.Controllers
 
             //var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
 
-            var propiedad = _db.Propiedades.FirstOrDefault(p => p.Id == id);
+            var propiedad = await _db.Propiedades.FirstOrDefaultAsync(p => p.Id == id);
 
             if (propiedad == null)
 
@@ -51,65 +58,51 @@ namespace PropiedadesMagicas_API.Controllers
                 return NotFound();
             }
 
-            return Ok(propiedad);
+            return Ok(_mappper.Map<PropiedadDto>(propiedad));
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<PropiedadDto> NewPropiedad([FromBody] PropiedadDto propiedadDto)
+        public async Task<ActionResult<PropiedadDto>> NewPropiedad([FromBody] PropiedadCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (_db.Propiedades.FirstOrDefault(p => p.Nombre.ToLower() == propiedadDto.Nombre.ToLower()) != null)
+            if (await _db.Propiedades.FirstOrDefaultAsync(p => p.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La propiedad con ese nombre ya existe!");
                 return BadRequest(ModelState);
             }
 
-            if (propiedadDto == null)
+            if (createDto == null)
             {
-                return BadRequest();
+                return BadRequest(createDto);
             }
 
-            if (propiedadDto.Id > 0)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            Propiedad modelo = _mappper.Map<Propiedad>(createDto);
 
-            Propiedad modelo = new()
-            {
-                Nombre = propiedadDto.Nombre,
-                Detalles = propiedadDto.Detalles,
-                ImagenUrl = propiedadDto.ImagenUrl,
-                Ocupantes = propiedadDto.Ocupantes,
-                Tarifa = propiedadDto.Tarifa,
-                MetrosCuadrados = propiedadDto.MetrosCuadrados,
-                Amenidad = propiedadDto.Amenidad
-            };
+            await _db.Propiedades.AddAsync(modelo);
+            await _db.SaveChangesAsync();
 
-            _db.Propiedades.Add(modelo);
-            _db.SaveChanges();
-
-            return CreatedAtRoute("GetPropiedad", new { id = propiedadDto.Id }, propiedadDto);
+            return CreatedAtRoute("GetPropiedad", new { id = modelo.Id }, modelo);
         }
 
         [HttpDelete("id: int")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult DeletePropiedad(int id)
+        public async Task<IActionResult> DeletePropiedad(int id)
         {
             if (id == 0)
             {
                 return BadRequest();
             }
 
-            var propiedad = _db.Propiedades.FirstOrDefault(p => p.Id == id);
+            var propiedad = await _db.Propiedades.FirstOrDefaultAsync(p => p.Id == id);
 
             if (propiedad == null)
             {
@@ -117,7 +110,7 @@ namespace PropiedadesMagicas_API.Controllers
             }
 
             _db.Propiedades.Remove(propiedad);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
@@ -125,33 +118,17 @@ namespace PropiedadesMagicas_API.Controllers
         [HttpPut("id: int")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult UpdatePropiedad(int id, [FromBody] PropiedadDto propiedadDto)
+        public async Task<IActionResult> UpdatePropiedad(int id, [FromBody] PropiedadUpdateDto updateDto)
         {
-            if (propiedadDto == null || id != propiedadDto.Id)
+            if (updateDto == null || id != updateDto.Id)
             {
                 return BadRequest();
             }
 
-            //var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
-
-            //propiedad.Nombre = propiedadDto.Nombre;
-            //propiedad.Ocupantes = propiedadDto.Ocupantes;
-            //propiedad.MetrosCuadrados = propiedadDto.MetrosCuadrados;
-
-            Propiedad modelo = new()
-            {
-                Id = propiedadDto.Id,
-                Nombre = propiedadDto.Nombre,
-                Detalles = propiedadDto.Detalles,
-                ImagenUrl = propiedadDto.ImagenUrl,
-                Ocupantes = propiedadDto.Ocupantes,
-                Tarifa = propiedadDto.Tarifa,
-                MetrosCuadrados = propiedadDto.MetrosCuadrados,
-                Amenidad = propiedadDto.Amenidad
-            };
+            Propiedad modelo = _mappper.Map<Propiedad>(updateDto);
 
             _db.Propiedades.Update(modelo);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
@@ -159,26 +136,16 @@ namespace PropiedadesMagicas_API.Controllers
         [HttpPatch("id: int")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult UpdatePartialPropiedad(int id, JsonPatchDocument<PropiedadDto> patchDto)
+        public async Task<IActionResult> UpdatePartialPropiedad(int id, JsonPatchDocument<PropiedadUpdateDto> patchDto)
         {
             if (patchDto == null || id == 0)
             {
                 return BadRequest();
             }
 
-            var propiedad = _db.Propiedades.AsNoTracking().FirstOrDefault(p => p.Id == id);
+            var propiedad = await _db.Propiedades.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
 
-            PropiedadDto propiedadDto = new()
-            {
-                Id = propiedad.Id,
-                Nombre = propiedad.Nombre,
-                Detalles = propiedad.Detalles,
-                ImagenUrl = propiedad.ImagenUrl,
-                Ocupantes = propiedad.Ocupantes,
-                Tarifa = propiedad.Tarifa,
-                MetrosCuadrados = propiedad.MetrosCuadrados,
-                Amenidad = propiedad.Amenidad
-            };
+            PropiedadUpdateDto propiedadDto = _mappper.Map<PropiedadUpdateDto>(propiedad);
 
             if (propiedad == null) return BadRequest();
 
@@ -189,20 +156,10 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest(ModelState);
             }
 
-            Propiedad modelo = new()
-            {
-                Id = propiedadDto.Id,
-                Nombre = propiedadDto.Nombre,
-                Detalles = propiedadDto.Detalles,
-                ImagenUrl = propiedadDto.ImagenUrl,
-                Ocupantes = propiedadDto.Ocupantes,
-                Tarifa = propiedadDto.Tarifa,
-                MetrosCuadrados = propiedadDto.MetrosCuadrados,
-                Amenidad = propiedadDto.Amenidad
-            };
+            Propiedad modelo = _mappper.Map<Propiedad>(propiedadDto);
 
             _db.Propiedades.Update(modelo);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
