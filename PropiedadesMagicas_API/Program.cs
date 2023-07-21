@@ -21,6 +21,8 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 builder.Services.AddScoped<IPropiedadRepositorio, PropiedadRepositorio>();
 
+builder.Services.AddScoped<INumeroPropiedadRepositorio, NumeroPropiedadRepositorio>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -11,6 +11,8 @@ namespace PropiedadesMagicas_API.Datos
 
         public DbSet<Propiedad> Propiedades { get; set; }
 
+        public DbSet<NumeroPropiedad> NumeroPropiedades { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Propiedad>().HasData(

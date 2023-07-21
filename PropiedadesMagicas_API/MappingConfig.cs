@@ -13,6 +13,10 @@ namespace PropiedadesMagicas_API
 
             CreateMap<Propiedad, PropiedadCreateDto>().ReverseMap();
             CreateMap<Propiedad, PropiedadUpdateDto>().ReverseMap();
+
+            CreateMap<NumeroPropiedad, NumeroPropiedadDto>().ReverseMap();
+            CreateMap<NumeroPropiedad, NumeroPropiedadCreateDto>().ReverseMap();
+            CreateMap<NumeroPropiedad, NumeroPropiedadUpdateDto>().ReverseMap();
         }
     }
 }

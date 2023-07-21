@@ -12,35 +12,37 @@ namespace PropiedadesMagicas_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PropiedadController : ControllerBase
+    public class NumeroPropiedadController : ControllerBase
     {
-        private readonly ILogger<PropiedadController> _logger;
+        private readonly ILogger<NumeroPropiedadController> _logger;
 
         private readonly IPropiedadRepositorio _propiedadRepo;
+        private readonly INumeroPropiedadRepositorio _numeroPropiedadRepo;
 
         private readonly IMapper _mappper;
 
         protected APIResponse _response;
 
-        public PropiedadController(ILogger<PropiedadController> logger, IPropiedadRepositorio propiedadRepo, IMapper mapper)
+        public NumeroPropiedadController(ILogger<NumeroPropiedadController> logger, IPropiedadRepositorio propiedadRepo, IMapper mapper, INumeroPropiedadRepositorio numeroPropiedadRepo)
         {
             _logger = logger;
             _propiedadRepo = propiedadRepo;
             _mappper = mapper;
             _response = new();
+            _numeroPropiedadRepo = numeroPropiedadRepo;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetPropiedades()
+        public async Task<ActionResult<APIResponse>> GetNumeroPropiedades()
         {
             try
             {
-                _logger.LogInformation("Obtener todas las propiedades");
+                _logger.LogInformation("Obtener numeros de las propiedades");
 
-                IEnumerable<Propiedad> propiedadList = await _propiedadRepo.ObtenerTodos();
+                IEnumerable<NumeroPropiedad> numeroPropiedadList = await _numeroPropiedadRepo.ObtenerTodos();
 
-                _response.Resultado = _mappper.Map<IEnumerable<PropiedadDto>>(propiedadList);
+                _response.Resultado = _mappper.Map<IEnumerable<PropiedadDto>>(numeroPropiedadList);
 
                 _response.StatusCode = HttpStatusCode.OK;
 
@@ -55,17 +57,17 @@ namespace PropiedadesMagicas_API.Controllers
             return _response;
         }
 
-        [HttpGet("id:int", Name = "GetPropiedad")]
+        [HttpGet("id:int", Name = "GetNumeroPropiedad")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> GetPropiedad(int id)
+        public async Task<ActionResult<APIResponse>> GetNumeroPropiedad(int id)
         {
             try
             {
                 if (id == 0)
                 {
-                    _logger.LogError("Error al obtener la Propiedad con id " + id);
+                    _logger.LogError("Error al obtener numero de Propiedad con el id " + id);
 
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsExitoso = false;
@@ -73,9 +75,9 @@ namespace PropiedadesMagicas_API.Controllers
                     return BadRequest(_response);
                 }
 
-                var propiedad = await _propiedadRepo.Obtener(p => p.Id == id);
+                var numeroPropiedad = await _numeroPropiedadRepo.Obtener(p => p.PropiedadId == id);
 
-                if (propiedad == null)
+                if (numeroPropiedad == null)
 
                 {
                     _response.StatusCode = HttpStatusCode.NotFound;
@@ -83,7 +85,7 @@ namespace PropiedadesMagicas_API.Controllers
                     return NotFound(_response);
                 }
 
-                _response.Resultado = _mappper.Map<PropiedadDto>(propiedad);
+                _response.Resultado = _mappper.Map<NumeroPropiedadDto>(numeroPropiedad);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
             }
@@ -100,7 +102,7 @@ namespace PropiedadesMagicas_API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> NewPropiedad([FromBody] PropiedadCreateDto createDto)
+        public async Task<ActionResult<APIResponse>> NewNumeroPropiedad([FromBody] NumeroPropiedadCreateDto createDto)
         {
             try
             {
@@ -109,9 +111,15 @@ namespace PropiedadesMagicas_API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                if (await _propiedadRepo.Obtener(p => p.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
+                if (await _numeroPropiedadRepo.Obtener(p => p.PropiedadNum == createDto.PropiedadNum) != null)
                 {
                     ModelState.AddModelError("NombreExiste", "La propiedad con ese nombre ya existe!");
+                    return BadRequest(ModelState);
+                }
+
+                if (await _propiedadRepo.Obtener(p => p.Id == createDto.PropiedadId) == null)
+                {
+                    ModelState.AddModelError("ClaveForanea", "El id de la propiedad no existe!");
                     return BadRequest(ModelState);
                 }
 
@@ -120,17 +128,17 @@ namespace PropiedadesMagicas_API.Controllers
                     return BadRequest(createDto);
                 }
 
-                Propiedad modelo = _mappper.Map<Propiedad>(createDto);
+                NumeroPropiedad modelo = _mappper.Map<NumeroPropiedad>(createDto);
 
                 modelo.FechaCreacion = DateTime.Now;
                 modelo.FechaActualizacion = DateTime.Now;
 
-                await _propiedadRepo.Crear(modelo);
+                await _numeroPropiedadRepo.Crear(modelo);
 
                 _response.Resultado = modelo;
                 _response.StatusCode = HttpStatusCode.Created;
 
-                return CreatedAtRoute("GetPropiedad", new { id = modelo.Id }, _response);
+                return CreatedAtRoute("GetNumeroPropiedad", new { id = modelo.PropiedadNum }, _response);
             }
             catch (Exception ex)
             {
@@ -145,7 +153,7 @@ namespace PropiedadesMagicas_API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeletePropiedad(int id)
+        public async Task<IActionResult> DeleteNumeroPropiedad(int id)
         {
             try
             {
@@ -156,16 +164,16 @@ namespace PropiedadesMagicas_API.Controllers
                     return BadRequest(_response);
                 }
 
-                var propiedad = await _propiedadRepo.Obtener(p => p.Id == id);
+                var numeroPropiedad = await _numeroPropiedadRepo.Obtener(p => p.PropiedadNum == id);
 
-                if (propiedad == null)
+                if (numeroPropiedad == null)
                 {
                     _response.IsExitoso = false;
                     _response.StatusCode = HttpStatusCode.NotFound;
                     return NotFound(_response);
                 }
 
-                await _propiedadRepo.Remover(propiedad);
+                await _numeroPropiedadRepo.Remover(numeroPropiedad);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
 
@@ -183,64 +191,26 @@ namespace PropiedadesMagicas_API.Controllers
         [HttpPut("id: int")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdatePropiedad(int id, [FromBody] PropiedadUpdateDto updateDto)
+        public async Task<IActionResult> UpdateNumeroPropiedad(int id, [FromBody] NumeroPropiedadUpdateDto updateDto)
         {
             try
             {
-                if (updateDto == null || id != updateDto.Id)
+                if (updateDto == null || id != updateDto.PropiedadNum)
                 {
                     _response.IsExitoso = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     return BadRequest(_response);
                 }
 
-                Propiedad modelo = _mappper.Map<Propiedad>(updateDto);
-
-                await _propiedadRepo.Actualizar(modelo);
-
-                _response.StatusCode = HttpStatusCode.NoContent;
-
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsExitoso = false;
-                _response.ErrorMessages = new List<string> { ex.ToString() };
-            }
-
-            return Ok(_response);
-        }
-
-        [HttpPatch("id: int")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdatePartialPropiedad(int id, JsonPatchDocument<PropiedadUpdateDto> patchDto)
-        {
-            try
-            {
-                if (patchDto == null || id == 0)
+                if (await _propiedadRepo.Obtener(p => p.Id == updateDto.PropiedadId) == null)
                 {
-                    _response.IsExitoso = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    return BadRequest();
-                }
-
-                var propiedad = await _propiedadRepo.Obtener(p => p.Id == id, tracked: false);
-
-                PropiedadUpdateDto propiedadDto = _mappper.Map<PropiedadUpdateDto>(propiedad);
-
-                if (propiedad == null) return BadRequest();
-
-                patchDto.ApplyTo(propiedadDto, ModelState);
-
-                if (!ModelState.IsValid)
-                {
+                    ModelState.AddModelError("Clave foranea", "El id de la propiedad no existe!");
                     return BadRequest(ModelState);
                 }
 
-                Propiedad modelo = _mappper.Map<Propiedad>(propiedadDto);
+                NumeroPropiedad modelo = _mappper.Map<NumeroPropiedad>(updateDto);
 
-                await _propiedadRepo.Actualizar(modelo);
+                await _numeroPropiedadRepo.Actualizar(modelo);
 
                 _response.StatusCode = HttpStatusCode.NoContent;
 
