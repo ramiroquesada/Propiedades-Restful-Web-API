@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PropiedadesMagicas_API;
 using PropiedadesMagicas_API.Datos;
+using PropiedadesMagicas_API.Repositorio;
+using PropiedadesMagicas_API.Repositorio.IRepositorio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 });
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
+
+builder.Services.AddScoped<IPropiedadRepositorio, PropiedadRepositorio>();
 
 var app = builder.Build();
 

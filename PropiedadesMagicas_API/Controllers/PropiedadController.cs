@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using PropiedadesMagicas_API.Datos;
 using PropiedadesMagicas_API.Models;
 using PropiedadesMagicas_API.Models.Dto;
+using PropiedadesMagicas_API.Repositorio.IRepositorio;
 
 namespace PropiedadesMagicas_API.Controllers
 {
@@ -14,14 +15,14 @@ namespace PropiedadesMagicas_API.Controllers
     {
         private readonly ILogger<PropiedadController> _logger;
 
-        private readonly ApplicationDbContext _db;
+        private readonly IPropiedadRepositorio _propiedadRepo;
 
         private readonly IMapper _mappper;
 
-        public PropiedadController(ILogger<PropiedadController> logger, ApplicationDbContext db, IMapper mapper)
+        public PropiedadController(ILogger<PropiedadController> logger, IPropiedadRepositorio propiedadRepo, IMapper mapper)
         {
             _logger = logger;
-            _db = db;
+            _propiedadRepo = propiedadRepo;
             _mappper = mapper;
         }
 
@@ -31,7 +32,7 @@ namespace PropiedadesMagicas_API.Controllers
         {
             _logger.LogInformation("Obtener todas las propiedades");
 
-            IEnumerable<Propiedad> propiedadList = await _db.Propiedades.ToListAsync();
+            IEnumerable<Propiedad> propiedadList = await _propiedadRepo.ObtenerTodos();
 
             return Ok(_mappper.Map<IEnumerable<PropiedadDto>>(propiedadList));
         }
@@ -50,7 +51,7 @@ namespace PropiedadesMagicas_API.Controllers
 
             //var propiedad = PropiedadStore.propiedadList.FirstOrDefault(p => p.Id == id);
 
-            var propiedad = await _db.Propiedades.FirstOrDefaultAsync(p => p.Id == id);
+            var propiedad = await _propiedadRepo.Obtener(p => p.Id == id);
 
             if (propiedad == null)
 
@@ -72,7 +73,7 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (await _db.Propiedades.FirstOrDefaultAsync(p => p.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
+            if (await _propiedadRepo.Obtener(p => p.Nombre.ToLower() == createDto.Nombre.ToLower()) != null)
             {
                 ModelState.AddModelError("NombreExiste", "La propiedad con ese nombre ya existe!");
                 return BadRequest(ModelState);
@@ -85,8 +86,7 @@ namespace PropiedadesMagicas_API.Controllers
 
             Propiedad modelo = _mappper.Map<Propiedad>(createDto);
 
-            await _db.Propiedades.AddAsync(modelo);
-            await _db.SaveChangesAsync();
+            await _propiedadRepo.Crear(modelo);
 
             return CreatedAtRoute("GetPropiedad", new { id = modelo.Id }, modelo);
         }
@@ -102,15 +102,14 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = await _db.Propiedades.FirstOrDefaultAsync(p => p.Id == id);
+            var propiedad = await _propiedadRepo.Obtener(p => p.Id == id);
 
             if (propiedad == null)
             {
                 return NotFound();
             }
 
-            _db.Propiedades.Remove(propiedad);
-            await _db.SaveChangesAsync();
+            _propiedadRepo.Remover(propiedad);
 
             return NoContent();
         }
@@ -127,8 +126,7 @@ namespace PropiedadesMagicas_API.Controllers
 
             Propiedad modelo = _mappper.Map<Propiedad>(updateDto);
 
-            _db.Propiedades.Update(modelo);
-            await _db.SaveChangesAsync();
+            _propiedadRepo.Actualizar(modelo);
 
             return NoContent();
         }
@@ -143,7 +141,7 @@ namespace PropiedadesMagicas_API.Controllers
                 return BadRequest();
             }
 
-            var propiedad = await _db.Propiedades.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            var propiedad = await _propiedadRepo.Obtener(p => p.Id == id, tracked: false);
 
             PropiedadUpdateDto propiedadDto = _mappper.Map<PropiedadUpdateDto>(propiedad);
 
@@ -158,8 +156,7 @@ namespace PropiedadesMagicas_API.Controllers
 
             Propiedad modelo = _mappper.Map<Propiedad>(propiedadDto);
 
-            _db.Propiedades.Update(modelo);
-            await _db.SaveChangesAsync();
+            _propiedadRepo.Actualizar(modelo);
 
             return NoContent();
         }
